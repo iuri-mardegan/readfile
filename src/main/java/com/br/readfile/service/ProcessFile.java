@@ -13,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ProcessFile {
 
@@ -26,16 +27,16 @@ public class ProcessFile {
     private List<Cliente> clienteList;
     private List<Venda> vendaList;
 
-    public void read(ModeloAbstract modelo) {
-        File path = new File(PATH_IN);
-        Arrays.stream(Objects.requireNonNull(path.list()))
-                .forEach(f -> processFile(modelo, f));
-    }
-
     private void inicializa() {
         vendedorList = new ArrayList<>();
         clienteList = new ArrayList<>();
         vendaList = new ArrayList<>();
+    }
+
+    public void read(ModeloAbstract modelo) {
+        File path = new File(PATH_IN);
+        Arrays.stream(Objects.requireNonNull(path.list()))
+                .forEach(f -> processFile(modelo, f));
     }
 
     private void processFile(ModeloAbstract modelo, String fileName) {
@@ -49,6 +50,7 @@ public class ProcessFile {
                 processData(data.split(modelo.getSeparador()));
             }
             myReader.close();
+            file.delete();
             writeFile(fileName);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -72,7 +74,7 @@ public class ProcessFile {
     }
 
     private List<Item> generateItemList(String itemListString) {
-        List<Item> itemList = new ArrayList<Item>();
+        List<Item> itemList = new ArrayList<>();
         try {
             JSONArray jsonArray = new JSONArray(itemListString);
             for (int i = 0; i < jsonArray.length(); i++) {
@@ -97,7 +99,7 @@ public class ProcessFile {
             myWriter.write("Clientes importados: "+clienteList.size());
             myWriter.write("\nVendedores importados: "+vendedorList.size());
             myWriter.write("\nId maior venda: "+maiorVenda());
-            myWriter.write("\nPior Vendedor: ");
+            myWriter.write("\nPior Vendedor: "+piorVendedor());
             myWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -107,5 +109,29 @@ public class ProcessFile {
     private Integer maiorVenda(){
         Collections.sort(vendaList);
         return vendaList.get(vendaList.size() - 1).getSaleId();
+    }
+
+    private String piorVendedor(){
+        Map<String, Double> vendasMap = new HashMap<>();
+        vendaList.forEach(v ->{
+            if(vendasMap.containsKey(v.getSalesmanName())){
+                vendasMap.put(v.getSalesmanName(),
+                        vendasMap.get(v.getSalesmanName()) +
+                        v.getItemList().stream().map(Item::getPrice)
+                                .reduce(0.0, Double::sum));
+            }else{
+                vendasMap.put(v.getSalesmanName(),
+                        v.getItemList().stream().map(Item::getPrice)
+                                .reduce(0.0, Double::sum));
+            }
+        });
+        vendasMap.entrySet()
+                .stream()
+                .sorted((Map.Entry.<String, Double>comparingByValue().reversed()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        return vendasMap.entrySet()
+                .stream()
+                .min(Comparator.comparing(Map.Entry::getValue))
+                .get().getKey();
     }
 }
