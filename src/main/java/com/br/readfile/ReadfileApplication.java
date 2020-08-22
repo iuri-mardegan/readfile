@@ -1,13 +1,13 @@
 package com.br.readfile;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.br.readfile.modelo.leitura.ModeloDefault;
+import com.br.readfile.service.ProcessFile;
 
-@SpringBootApplication
 public class ReadfileApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ReadfileApplication.class, args);
-	}
+    public static void main(String[] args) {
+        ProcessFile processFile = new ProcessFile();
+        processFile.read(new ModeloDefault());
+    }
 
 }
