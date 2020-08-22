@@ -7,6 +7,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class Item {
     private String id;
-    private String quantity;
-    private String price;
+    private Integer quantity;
+    private Double price;
 }

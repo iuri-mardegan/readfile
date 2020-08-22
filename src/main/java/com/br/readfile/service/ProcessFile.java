@@ -10,6 +10,7 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
@@ -63,7 +64,7 @@ public class ProcessFile {
                 clienteList.add(new Cliente(data[1], data[2], data[3]));
                 break;
             case VENDA:
-                vendaList.add(new Venda(data[1], generateItemList(data[2]), data[3]));
+                vendaList.add(new Venda(Integer.parseInt(data[1]), generateItemList(data[2]), data[3]));
                 break;
             default:
                 break;
@@ -77,7 +78,7 @@ public class ProcessFile {
             for (int i = 0; i < jsonArray.length(); i++) {
                 String itemValue = (String) jsonArray.get(i);
                 String[] itemValueArray = itemValue.split("-");
-                itemList.add(new Item(itemValueArray[0], itemValueArray[1], itemValueArray[2]));
+                itemList.add(new Item(itemValueArray[0], Integer.parseInt(itemValueArray[1]), Double.parseDouble(itemValueArray[2])));
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -87,12 +88,24 @@ public class ProcessFile {
     }
 
     private void writeFile(String fileName) {
-        String[] fileNameArray = fileName.split("\\.");
-        File myObj = new File(PATH_OUT + fileNameArray[0] + ".done." + fileNameArray[1]);
+        String[] fileNameArray = fileName.split("\\.",2);
+        fileName = PATH_OUT + fileNameArray[0] + ".done." + fileNameArray[1];
+        File myObj = new File(fileName);
         try {
             myObj.createNewFile();
+            FileWriter myWriter = new FileWriter(fileName);
+            myWriter.write("Clientes importados: "+clienteList.size());
+            myWriter.write("\nVendedores importados: "+vendedorList.size());
+            myWriter.write("\nId maior venda: "+maiorVenda());
+            myWriter.write("\nPior Vendedor: ");
+            myWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private Integer maiorVenda(){
+        Collections.sort(vendaList);
+        return vendaList.get(vendaList.size() - 1).getSaleId();
     }
 }
