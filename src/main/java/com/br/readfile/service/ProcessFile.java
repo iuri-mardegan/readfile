@@ -8,10 +8,7 @@ import com.br.readfile.modelo.leitura.ModeloAbstract;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,8 +32,9 @@ public class ProcessFile {
 
     public void read(ModeloAbstract modelo) {
         File path = new File(PATH_IN);
-        Arrays.stream(Objects.requireNonNull(path.list()))
-                .forEach(f -> processFile(modelo, f));
+        for (String f : Objects.requireNonNull(path.list((dir, name) -> name.endsWith(".dat")))) {
+            processFile(modelo, f);
+        }
     }
 
     private void processFile(ModeloAbstract modelo, String fileName) {
