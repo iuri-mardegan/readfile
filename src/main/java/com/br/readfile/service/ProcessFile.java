@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 public class ProcessFile {
 
     private final String PATH_IN = "data/in/";
-    private final String PATH_OUT = "data/out/";
     private final String VENDEDOR = "001";
     private final String CLIENTE = "002";
     private final String VENDA = "003";
@@ -32,7 +31,7 @@ public class ProcessFile {
 
     public void read(ModeloAbstract modelo) {
         File path = new File(PATH_IN);
-        for (String f : Objects.requireNonNull(path.list((dir, name) -> name.endsWith(".dat")))) {
+        for (String f : Objects.requireNonNull(path.list((dir, name) -> name.endsWith(modelo.getExtension())))) {
             processFile(modelo, f);
         }
     }
@@ -49,7 +48,7 @@ public class ProcessFile {
             }
             myReader.close();
             file.delete();
-            writeFile(fileName);
+            ProcessOutputFile.writeFile(fileName, vendedorList, clienteList, vendaList);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -87,49 +86,4 @@ public class ProcessFile {
         return itemList;
     }
 
-    private void writeFile(String fileName) {
-        String[] fileNameArray = fileName.split("\\.",2);
-        fileName = PATH_OUT + fileNameArray[0] + ".done." + fileNameArray[1];
-        File myObj = new File(fileName);
-        try {
-            myObj.createNewFile();
-            FileWriter myWriter = new FileWriter(fileName);
-            myWriter.write("Clientes importados: "+clienteList.size());
-            myWriter.write("\nVendedores importados: "+vendedorList.size());
-            myWriter.write("\nId maior venda: "+maiorVenda());
-            myWriter.write("\nPior Vendedor: "+piorVendedor());
-            myWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Integer maiorVenda(){
-        Collections.sort(vendaList);
-        return vendaList.get(vendaList.size() - 1).getSaleId();
-    }
-
-    private String piorVendedor(){
-        Map<String, Double> vendasMap = new HashMap<>();
-        vendaList.forEach(v ->{
-            if(vendasMap.containsKey(v.getSalesmanName())){
-                vendasMap.put(v.getSalesmanName(),
-                        vendasMap.get(v.getSalesmanName()) +
-                        v.getItemList().stream().map(Item::getPrice)
-                                .reduce(0.0, Double::sum));
-            }else{
-                vendasMap.put(v.getSalesmanName(),
-                        v.getItemList().stream().map(Item::getPrice)
-                                .reduce(0.0, Double::sum));
-            }
-        });
-        vendasMap.entrySet()
-                .stream()
-                .sorted((Map.Entry.<String, Double>comparingByValue().reversed()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-        return vendasMap.entrySet()
-                .stream()
-                .min(Comparator.comparing(Map.Entry::getValue))
-                .get().getKey();
-    }
 }

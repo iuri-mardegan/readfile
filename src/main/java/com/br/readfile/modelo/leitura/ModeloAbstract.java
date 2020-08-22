@@ -8,4 +8,5 @@ import lombok.Setter;
 public abstract class ModeloAbstract {
 
     private String separador;
+    private String extension;
 }
